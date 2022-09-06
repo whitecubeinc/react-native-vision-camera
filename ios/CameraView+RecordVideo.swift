@@ -6,7 +6,9 @@
 //  Copyright © 2020 mrousavy. All rights reserved.
 //
 
+import CoreGraphics
 import AVFoundation
+import UIKit
 
 // MARK: - CameraView + AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate
 
@@ -191,6 +193,8 @@ extension CameraView: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAud
 
   public final func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from _: AVCaptureConnection) {
     // Video Recording runs in the same queue
+    self.currentImage = self.createImageFromSampleBuffer(sampleBuffer: sampleBuffer)
+
     if isRecording {
       guard let recordingSession = recordingSession else {
         invokeOnError(.capture(.unknown(message: "isRecording was true but the RecordingSession was null!")))
@@ -241,6 +245,18 @@ extension CameraView: AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAud
         evaluateNewPerformanceSamples()
       }
     }
+  }
+
+  private func createImageFromSampleBuffer(sampleBuffer: CMSampleBuffer) -> UIImage? {
+    guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+      return nil
+    }
+
+    let ciimage = CIImage(cvPixelBuffer: imageBuffer)
+    let context = CIContext(options: nil)
+    let cgImage = context.createCGImage(ciimage, from: ciimage.extent)!
+
+    return UIImage(cgImage: cgImage)
   }
 
   private func evaluateNewPerformanceSamples() {
