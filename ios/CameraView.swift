@@ -112,6 +112,8 @@ public final class CameraView: UIView {
   internal var lastSuggestedFrameProcessorFps = 0.0
   internal var lastFrameProcessorPerformanceEvaluation = DispatchTime.now()
 
+  internal var currentImage: UIImage?
+
   /// Returns whether the AVCaptureSession is currently running (reflected by isActive)
   var isRunning: Bool {
     return captureSession.isRunning
