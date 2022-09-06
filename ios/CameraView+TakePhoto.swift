@@ -36,6 +36,45 @@ extension CameraView {
         }
       }
 
+      /* Author: Jay */
+      guard let takenImage = self.currentImage else {
+        promise.reject(error: .capture(.invalidPhotoCodec))
+        return
+      }
+
+      let error = ErrorPointer(nilLiteral: ())
+      guard let tempFilePath = RCTTempFilePath("jpeg", error)
+      else {
+        promise.reject(error: .capture(.createTempFileError), cause: error?.pointee)
+        return
+      }
+      let url = URL(string: "file://\(tempFilePath)")!
+
+      guard let data = takenImage.jpegData(compressionQuality: 1.0) else {
+        promise.reject(error: .capture(.fileError))
+        return
+      }
+
+      do {
+        try data.write(to: url)
+//        let exif = photo.metadata["{Exif}"] as? [String: Any]
+//        let width = exif?["PixelXDimension"]
+//        let height = exif?["PixelYDimension"]
+
+        promise.resolve([
+          "path": tempFilePath,
+          "width": takenImage.size.width as Any,
+          "height": takenImage.size.height as Any,
+          "isRawPhoto": true,
+          "metadata": nil,
+          "thumbnail": nil,
+        ])
+      } catch {
+        promise.reject(error: .capture(.fileError), cause: error as NSError)
+      }
+      return
+      /* END */
+
       ReactLogger.log(level: .info, message: "Capturing photo...")
 
       var format: [String: Any]?
